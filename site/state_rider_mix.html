@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.56">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Joe Gallagher">
+
+<title>exploring_MTA - Replicating Erin Davis’ ‘viral map’ with public transit ridership data</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">exploring_MTA</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html" rel="" target="">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./about.html" rel="" target="">
+ <span class="menu-text">About</span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Replicating Erin Davis’ ‘viral map’ with public transit ridership data</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Joe Gallagher </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p>In this vignette, I will adapt Erin Davis’ <a href="https://erdavis.com/2022/02/09/how-i-made-the-viral-map/">viral map</a> using public transit ridership data. Using U.S. Census ACS data, we can make a similar map to show how the “ridership mix” in each state has changed from 2011-2021. The ACS collects data in the Transportation to Work universe, capturing which public transit modes use at the tract or block-group level. The ACS has estimates for commuter/long-distance rail, ferry, subway/elevated rail, trolley/streetcar and bus. The first thing we need to do is find and store the unique name variable the Census uses for each mode.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="do">##the variables for each mode were unchanged from 2011-2018</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>pt <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"B08301_010"</span>) <span class="co">#total using public transportation</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>bus <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"B08301_011"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>subway <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"B08301_013"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>comm_rail <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"B08301_014"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>trolley <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"B08301_012"</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>ferry <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"B08301_015"</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="do">##when we call 2019-2021 ACS data, we will change the following vars</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="do">##subway.19 &lt;- c("B08301_012")</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="do">##comm_rail.19 &lt;- c("B08301_013")</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="do">##trolley.19 &lt;- c("B08301_014")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>When we call tidycensus for the ACS data, we will rename each variable. We will also include functions to clean the data as well as calculate percentages for each share of each mode. It’s going to look pretty clunky. I will share the first call in the chunk below with commentary.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2021</span> <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span> <span class="st">"state"</span>, </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"pt"</span> <span class="ot">=</span> pt,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"bus"</span> <span class="ot">=</span> bus,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"subway"</span> <span class="ot">=</span> <span class="st">"B08301_012"</span>, <span class="co">#19-21 ACS used a different variable for these three modes, so I'm not using the stored vars</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"comm_rail"</span> <span class="ot">=</span> <span class="st">"B08301_013"</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"trolley"</span> <span class="ot">=</span> <span class="st">"B08301_014"</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"ferry"</span> <span class="ot">=</span> ferry),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                   <span class="at">year =</span> <span class="dv">2021</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                   <span class="at">survey =</span> <span class="st">"acs5"</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                   <span class="at">output =</span> <span class="st">"wide"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We need wide data to easily calculate the new percentage columns (I know no other way!). However, that leads to some clunky cumbersome colnames, some of which we will rename, others will be dropped entirely.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(pt<span class="fl">.2021</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "GEOID"      "NAME"       "ptE"        "ptM"        "busE"      
+ [6] "busM"       "subwayE"    "subwayM"    "comm_railE" "comm_railM"
+[11] "trolleyE"   "trolleyM"   "ferryE"     "ferryM"    </code></pre>
+</div>
+</div>
+<p>In the next chunk, we store the colnames that we want to drop, calculate new columns, drop the unneeded columns, and finally pivot_longer which will be important for how we construct our plots later.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>drop <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"ptM"</span>,</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>          <span class="st">"busM"</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>          <span class="st">"comm_railM"</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>          <span class="st">"subwayM"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>          <span class="st">"trolleyM"</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>          <span class="st">"totpopM"</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>          <span class="st">"busE"</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>          <span class="st">"ferryM"</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>          <span class="st">"ptE"</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>          <span class="st">"comm_railE"</span>,</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>          <span class="st">"subwayE"</span>,</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>          <span class="st">"trolleyE"</span>,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>          <span class="st">"ferryE"</span>) <span class="do">##colnames that are soon to leave us</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a> <span class="do">##add a year column</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2021</span><span class="sc">$</span>year <span class="ot">&lt;-</span> <span class="dv">2021</span> </span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2021</span> <span class="ot">&lt;-</span> pt<span class="fl">.2021</span><span class="sc">%&gt;%</span> </span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="do">##calculating new columns - part (mode) / whole (ptE or estimate of total ridership) * 100</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">Ferry_Perc =</span> ferryE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">Trolley_Perc =</span> trolleyE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">Subway_Perc =</span>  subwayE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">Comm_Rail_Perc =</span> comm_railE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>, </span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">Bus_Perc =</span> busE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>)<span class="sc">%&gt;%</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span>(<span class="fu">contains</span>(<span class="fu">c</span>(drop))))<span class="sc">%&gt;%</span> <span class="do">##using tidy_select to drop the unwanted columns</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="do">##pivoting longer for ggplot's sake</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">ends_with</span>(<span class="st">"_Perc"</span>),</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"variables"</span>,</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"estimate"</span>)</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pt<span class="fl">.2021</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 5
+  GEOID NAME     year variables      estimate
+  &lt;chr&gt; &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;             &lt;dbl&gt;
+1 01    Alabama  2021 Ferry_Perc        2.37 
+2 01    Alabama  2021 Trolley_Perc      1.76 
+3 01    Alabama  2021 Subway_Perc       0.310
+4 01    Alabama  2021 Comm_Rail_Perc    1.04 
+5 01    Alabama  2021 Bus_Perc         94.5  
+6 02    Alaska   2021 Ferry_Perc       11.1  </code></pre>
+</div>
+</div>
+<p>Looks like we were successful. Let’s do this again for 9 more years of data. Wouldn’t it be cool to do this in a function? Maybe one day!</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2020</span> <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span> <span class="st">"state"</span>, </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"pt"</span> <span class="ot">=</span> pt,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"bus"</span> <span class="ot">=</span> bus,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"subway"</span> <span class="ot">=</span> <span class="st">"B08301_012"</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"comm_rail"</span> <span class="ot">=</span> <span class="st">"B08301_013"</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"trolley"</span> <span class="ot">=</span> <span class="st">"B08301_014"</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"ferry"</span> <span class="ot">=</span> ferry</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                                 ),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                   <span class="at">year =</span> <span class="dv">2020</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                   <span class="at">survey =</span> <span class="st">"acs5"</span>,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                   <span class="at">output =</span> <span class="st">"wide"</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2020</span><span class="sc">$</span>year <span class="ot">&lt;-</span> <span class="dv">2020</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2020</span> <span class="ot">&lt;-</span> pt<span class="fl">.2020</span> <span class="sc">%&gt;%</span> </span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">Ferry_Perc =</span> ferryE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">Trolley_Perc =</span> trolleyE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">Subway_Perc =</span>  subwayE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">Comm_Rail_Perc =</span> comm_railE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>, </span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">Bus_Perc =</span> busE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">%&gt;%</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span>(<span class="fu">contains</span>(<span class="fu">c</span>(drop))))<span class="sc">%&gt;%</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">ends_with</span>(<span class="st">"_Perc"</span>),</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"variables"</span>,</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"estimate"</span>)</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2019</span> <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span> <span class="st">"state"</span>, </span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>                   <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"pt"</span> <span class="ot">=</span> pt,</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"bus"</span> <span class="ot">=</span> bus,</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"subway"</span> <span class="ot">=</span> <span class="st">"B08301_012"</span>,</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"comm_rail"</span> <span class="ot">=</span> <span class="st">"B08301_013"</span>,</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"trolley"</span> <span class="ot">=</span> <span class="st">"B08301_014"</span>,</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"ferry"</span> <span class="ot">=</span> ferry</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>                                 ),</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>                   <span class="at">year =</span> <span class="dv">2019</span>,</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>                   <span class="at">survey =</span> <span class="st">"acs5"</span>,</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>                   <span class="at">output =</span> <span class="st">"wide"</span>)</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2019</span><span class="sc">$</span>year <span class="ot">&lt;-</span> <span class="dv">2019</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2019</span> <span class="ot">&lt;-</span> pt<span class="fl">.2019</span> <span class="sc">%&gt;%</span> </span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">Ferry_Perc =</span> ferryE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">Trolley_Perc =</span> trolleyE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">Subway_Perc =</span>  subwayE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>    <span class="at">Comm_Rail_Perc =</span> comm_railE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>, </span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">Bus_Perc =</span> busE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">%&gt;%</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span>(<span class="fu">contains</span>(<span class="fu">c</span>(drop))))<span class="sc">%&gt;%</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">ends_with</span>(<span class="st">"_Perc"</span>),</span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"variables"</span>,</span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"estimate"</span>)</span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2018</span> <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span> <span class="st">"state"</span>, </span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>                   <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"pt"</span> <span class="ot">=</span> pt,</span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"bus"</span> <span class="ot">=</span> bus,</span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"subway"</span> <span class="ot">=</span> subway, <span class="do">##from 2018, we can use our stored variables</span></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"comm_rail"</span> <span class="ot">=</span> comm_rail,</span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"trolley"</span> <span class="ot">=</span> trolley,</span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"ferry"</span> <span class="ot">=</span> ferry</span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>                                 ),</span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a>                   <span class="at">year =</span> <span class="dv">2018</span>,</span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>                   <span class="at">survey =</span> <span class="st">"acs5"</span>,</span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>                   <span class="at">output =</span> <span class="st">"wide"</span>)</span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2018</span><span class="sc">$</span>year <span class="ot">&lt;-</span> <span class="dv">2018</span></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2018</span> <span class="ot">&lt;-</span> pt<span class="fl">.2018</span> <span class="sc">%&gt;%</span> </span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a>    <span class="at">Ferry_Perc =</span> ferryE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a>    <span class="at">Trolley_Perc =</span> trolleyE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a>    <span class="at">Subway_Perc =</span>  subwayE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a>    <span class="at">Comm_Rail_Perc =</span> comm_railE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>, </span>
+<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a>    <span class="at">Bus_Perc =</span> busE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">%&gt;%</span></span>
+<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span>(<span class="fu">contains</span>(<span class="fu">c</span>(drop))))<span class="sc">%&gt;%</span></span>
+<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">ends_with</span>(<span class="st">"_Perc"</span>),</span>
+<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"variables"</span>,</span>
+<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"estimate"</span>)</span>
+<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2017</span> <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span> <span class="st">"state"</span>, </span>
+<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a>                   <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"pt"</span> <span class="ot">=</span> pt,</span>
+<span id="cb7-88"><a href="#cb7-88" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"bus"</span> <span class="ot">=</span> bus,</span>
+<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"subway"</span> <span class="ot">=</span> subway,</span>
+<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"comm_rail"</span> <span class="ot">=</span> comm_rail,</span>
+<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"trolley"</span> <span class="ot">=</span> trolley,</span>
+<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"ferry"</span> <span class="ot">=</span> ferry</span>
+<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a>                                 ),</span>
+<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a>                   <span class="at">year =</span> <span class="dv">2017</span>,</span>
+<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a>                   <span class="at">survey =</span> <span class="st">"acs5"</span>,</span>
+<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a>                   <span class="at">output =</span> <span class="st">"wide"</span>)</span>
+<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2017</span><span class="sc">$</span>year <span class="ot">&lt;-</span> <span class="dv">2017</span></span>
+<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2017</span> <span class="ot">&lt;-</span> pt<span class="fl">.2017</span> <span class="sc">%&gt;%</span> </span>
+<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb7-101"><a href="#cb7-101" aria-hidden="true" tabindex="-1"></a>    <span class="at">Ferry_Perc =</span> ferryE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a>    <span class="at">Trolley_Perc =</span> trolleyE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a>    <span class="at">Subway_Perc =</span>  subwayE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a>    <span class="at">Comm_Rail_Perc =</span> comm_railE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>, </span>
+<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a>    <span class="at">Bus_Perc =</span> busE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">%&gt;%</span></span>
+<span id="cb7-107"><a href="#cb7-107" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span>(<span class="fu">contains</span>(<span class="fu">c</span>(drop))))<span class="sc">%&gt;%</span></span>
+<span id="cb7-108"><a href="#cb7-108" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">ends_with</span>(<span class="st">"_Perc"</span>),</span>
+<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"variables"</span>,</span>
+<span id="cb7-111"><a href="#cb7-111" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"estimate"</span>)</span>
+<span id="cb7-112"><a href="#cb7-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-113"><a href="#cb7-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-114"><a href="#cb7-114" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2016</span> <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span> <span class="st">"state"</span>, </span>
+<span id="cb7-115"><a href="#cb7-115" aria-hidden="true" tabindex="-1"></a>                   <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"pt"</span> <span class="ot">=</span> pt,</span>
+<span id="cb7-116"><a href="#cb7-116" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"bus"</span> <span class="ot">=</span> bus,</span>
+<span id="cb7-117"><a href="#cb7-117" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"subway"</span> <span class="ot">=</span> subway,</span>
+<span id="cb7-118"><a href="#cb7-118" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"comm_rail"</span> <span class="ot">=</span> comm_rail,</span>
+<span id="cb7-119"><a href="#cb7-119" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"trolley"</span> <span class="ot">=</span> trolley,</span>
+<span id="cb7-120"><a href="#cb7-120" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"ferry"</span> <span class="ot">=</span> ferry</span>
+<span id="cb7-121"><a href="#cb7-121" aria-hidden="true" tabindex="-1"></a>                                 ),</span>
+<span id="cb7-122"><a href="#cb7-122" aria-hidden="true" tabindex="-1"></a>                   <span class="at">year =</span> <span class="dv">2016</span>,</span>
+<span id="cb7-123"><a href="#cb7-123" aria-hidden="true" tabindex="-1"></a>                   <span class="at">survey =</span> <span class="st">"acs5"</span>,</span>
+<span id="cb7-124"><a href="#cb7-124" aria-hidden="true" tabindex="-1"></a>                   <span class="at">output =</span> <span class="st">"wide"</span>)</span>
+<span id="cb7-125"><a href="#cb7-125" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2016</span><span class="sc">$</span>year <span class="ot">&lt;-</span> <span class="dv">2016</span></span>
+<span id="cb7-126"><a href="#cb7-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-127"><a href="#cb7-127" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2016</span> <span class="ot">&lt;-</span> pt<span class="fl">.2016</span> <span class="sc">%&gt;%</span> </span>
+<span id="cb7-128"><a href="#cb7-128" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb7-129"><a href="#cb7-129" aria-hidden="true" tabindex="-1"></a>    <span class="at">Ferry_Perc =</span> ferryE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-130"><a href="#cb7-130" aria-hidden="true" tabindex="-1"></a>    <span class="at">Trolley_Perc =</span> trolleyE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-131"><a href="#cb7-131" aria-hidden="true" tabindex="-1"></a>    <span class="at">Subway_Perc =</span>  subwayE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-132"><a href="#cb7-132" aria-hidden="true" tabindex="-1"></a>    <span class="at">Comm_Rail_Perc =</span> comm_railE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>, </span>
+<span id="cb7-133"><a href="#cb7-133" aria-hidden="true" tabindex="-1"></a>    <span class="at">Bus_Perc =</span> busE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb7-134"><a href="#cb7-134" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">%&gt;%</span></span>
+<span id="cb7-135"><a href="#cb7-135" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span>(<span class="fu">contains</span>(<span class="fu">c</span>(drop))))<span class="sc">%&gt;%</span></span>
+<span id="cb7-136"><a href="#cb7-136" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb7-137"><a href="#cb7-137" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">ends_with</span>(<span class="st">"_Perc"</span>),</span>
+<span id="cb7-138"><a href="#cb7-138" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"variables"</span>,</span>
+<span id="cb7-139"><a href="#cb7-139" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"estimate"</span>)</span>
+<span id="cb7-140"><a href="#cb7-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-141"><a href="#cb7-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-142"><a href="#cb7-142" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2015</span> <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span> <span class="st">"state"</span>, </span>
+<span id="cb7-143"><a href="#cb7-143" aria-hidden="true" tabindex="-1"></a>                   <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"pt"</span> <span class="ot">=</span> pt,</span>
+<span id="cb7-144"><a href="#cb7-144" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"bus"</span> <span class="ot">=</span> bus,</span>
+<span id="cb7-145"><a href="#cb7-145" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"subway"</span> <span class="ot">=</span> subway,</span>
+<span id="cb7-146"><a href="#cb7-146" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"comm_rail"</span> <span class="ot">=</span> comm_rail,</span>
+<span id="cb7-147"><a href="#cb7-147" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"trolley"</span> <span class="ot">=</span> trolley,</span>
+<span id="cb7-148"><a href="#cb7-148" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"ferry"</span> <span class="ot">=</span> ferry</span>
+<span id="cb7-149"><a href="#cb7-149" aria-hidden="true" tabindex="-1"></a>                                 ),</span>
+<span id="cb7-150"><a href="#cb7-150" aria-hidden="true" tabindex="-1"></a>                   <span class="at">year =</span> <span class="dv">2015</span>,</span>
+<span id="cb7-151"><a href="#cb7-151" aria-hidden="true" tabindex="-1"></a>                   <span class="at">survey =</span> <span class="st">"acs5"</span>,</span>
+<span id="cb7-152"><a href="#cb7-152" aria-hidden="true" tabindex="-1"></a>                   <span class="at">output =</span> <span class="st">"wide"</span>)</span>
+<span id="cb7-153"><a href="#cb7-153" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2015</span><span class="sc">$</span>year <span class="ot">&lt;-</span> <span class="dv">2015</span></span>
+<span id="cb7-154"><a href="#cb7-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-155"><a href="#cb7-155" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2015</span> <span class="ot">&lt;-</span> pt<span class="fl">.2015</span> <span class="sc">%&gt;%</span> </span>
+<span id="cb7-156"><a href="#cb7-156" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb7-157"><a href="#cb7-157" aria-hidden="true" tabindex="-1"></a>    <span class="at">Ferry_Perc =</span> ferryE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-158"><a href="#cb7-158" aria-hidden="true" tabindex="-1"></a>    <span class="at">Trolley_Perc =</span> trolleyE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-159"><a href="#cb7-159" aria-hidden="true" tabindex="-1"></a>    <span class="at">Subway_Perc =</span>  subwayE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-160"><a href="#cb7-160" aria-hidden="true" tabindex="-1"></a>    <span class="at">Comm_Rail_Perc =</span> comm_railE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>, </span>
+<span id="cb7-161"><a href="#cb7-161" aria-hidden="true" tabindex="-1"></a>    <span class="at">Bus_Perc =</span> busE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb7-162"><a href="#cb7-162" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">%&gt;%</span></span>
+<span id="cb7-163"><a href="#cb7-163" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span>(<span class="fu">contains</span>(<span class="fu">c</span>(drop))))<span class="sc">%&gt;%</span></span>
+<span id="cb7-164"><a href="#cb7-164" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb7-165"><a href="#cb7-165" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">ends_with</span>(<span class="st">"_Perc"</span>),</span>
+<span id="cb7-166"><a href="#cb7-166" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"variables"</span>,</span>
+<span id="cb7-167"><a href="#cb7-167" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"estimate"</span>)</span>
+<span id="cb7-168"><a href="#cb7-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-169"><a href="#cb7-169" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2014</span> <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span> <span class="st">"state"</span>, </span>
+<span id="cb7-170"><a href="#cb7-170" aria-hidden="true" tabindex="-1"></a>                   <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"pt"</span> <span class="ot">=</span> pt,</span>
+<span id="cb7-171"><a href="#cb7-171" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"bus"</span> <span class="ot">=</span> bus,</span>
+<span id="cb7-172"><a href="#cb7-172" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"subway"</span> <span class="ot">=</span> subway,</span>
+<span id="cb7-173"><a href="#cb7-173" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"comm_rail"</span> <span class="ot">=</span> comm_rail,</span>
+<span id="cb7-174"><a href="#cb7-174" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"trolley"</span> <span class="ot">=</span> trolley,</span>
+<span id="cb7-175"><a href="#cb7-175" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"ferry"</span> <span class="ot">=</span> ferry</span>
+<span id="cb7-176"><a href="#cb7-176" aria-hidden="true" tabindex="-1"></a>                                 ),</span>
+<span id="cb7-177"><a href="#cb7-177" aria-hidden="true" tabindex="-1"></a>                   <span class="at">year =</span> <span class="dv">2014</span>,</span>
+<span id="cb7-178"><a href="#cb7-178" aria-hidden="true" tabindex="-1"></a>                   <span class="at">survey =</span> <span class="st">"acs5"</span>,</span>
+<span id="cb7-179"><a href="#cb7-179" aria-hidden="true" tabindex="-1"></a>                   <span class="at">output =</span> <span class="st">"wide"</span>)</span>
+<span id="cb7-180"><a href="#cb7-180" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2014</span><span class="sc">$</span>year <span class="ot">&lt;-</span> <span class="dv">2014</span></span>
+<span id="cb7-181"><a href="#cb7-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-182"><a href="#cb7-182" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2014</span> <span class="ot">&lt;-</span> pt<span class="fl">.2014</span> <span class="sc">%&gt;%</span> </span>
+<span id="cb7-183"><a href="#cb7-183" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb7-184"><a href="#cb7-184" aria-hidden="true" tabindex="-1"></a>    <span class="at">Ferry_Perc =</span> ferryE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-185"><a href="#cb7-185" aria-hidden="true" tabindex="-1"></a>    <span class="at">Trolley_Perc =</span> trolleyE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-186"><a href="#cb7-186" aria-hidden="true" tabindex="-1"></a>    <span class="at">Subway_Perc =</span>  subwayE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-187"><a href="#cb7-187" aria-hidden="true" tabindex="-1"></a>    <span class="at">Comm_Rail_Perc =</span> comm_railE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>, </span>
+<span id="cb7-188"><a href="#cb7-188" aria-hidden="true" tabindex="-1"></a>    <span class="at">Bus_Perc =</span> busE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb7-189"><a href="#cb7-189" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">%&gt;%</span></span>
+<span id="cb7-190"><a href="#cb7-190" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span>(<span class="fu">contains</span>(<span class="fu">c</span>(drop))))<span class="sc">%&gt;%</span></span>
+<span id="cb7-191"><a href="#cb7-191" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb7-192"><a href="#cb7-192" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">ends_with</span>(<span class="st">"_Perc"</span>),</span>
+<span id="cb7-193"><a href="#cb7-193" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"variables"</span>,</span>
+<span id="cb7-194"><a href="#cb7-194" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"estimate"</span>)</span>
+<span id="cb7-195"><a href="#cb7-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-196"><a href="#cb7-196" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2013</span> <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span> <span class="st">"state"</span>, </span>
+<span id="cb7-197"><a href="#cb7-197" aria-hidden="true" tabindex="-1"></a>                   <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"pt"</span> <span class="ot">=</span> pt,</span>
+<span id="cb7-198"><a href="#cb7-198" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"bus"</span> <span class="ot">=</span> bus,</span>
+<span id="cb7-199"><a href="#cb7-199" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"subway"</span> <span class="ot">=</span> subway,</span>
+<span id="cb7-200"><a href="#cb7-200" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"comm_rail"</span> <span class="ot">=</span> comm_rail,</span>
+<span id="cb7-201"><a href="#cb7-201" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"trolley"</span> <span class="ot">=</span> trolley,</span>
+<span id="cb7-202"><a href="#cb7-202" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"ferry"</span> <span class="ot">=</span> ferry</span>
+<span id="cb7-203"><a href="#cb7-203" aria-hidden="true" tabindex="-1"></a>                                 ),</span>
+<span id="cb7-204"><a href="#cb7-204" aria-hidden="true" tabindex="-1"></a>                   <span class="at">year =</span> <span class="dv">2013</span>,</span>
+<span id="cb7-205"><a href="#cb7-205" aria-hidden="true" tabindex="-1"></a>                   <span class="at">survey =</span> <span class="st">"acs5"</span>,</span>
+<span id="cb7-206"><a href="#cb7-206" aria-hidden="true" tabindex="-1"></a>                   <span class="at">output =</span> <span class="st">"wide"</span>)</span>
+<span id="cb7-207"><a href="#cb7-207" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2013</span><span class="sc">$</span>year <span class="ot">&lt;-</span> <span class="dv">2013</span></span>
+<span id="cb7-208"><a href="#cb7-208" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-209"><a href="#cb7-209" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2013</span> <span class="ot">&lt;-</span> pt<span class="fl">.2013</span> <span class="sc">%&gt;%</span> </span>
+<span id="cb7-210"><a href="#cb7-210" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb7-211"><a href="#cb7-211" aria-hidden="true" tabindex="-1"></a>    <span class="at">Ferry_Perc =</span> ferryE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-212"><a href="#cb7-212" aria-hidden="true" tabindex="-1"></a>    <span class="at">Trolley_Perc =</span> trolleyE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-213"><a href="#cb7-213" aria-hidden="true" tabindex="-1"></a>    <span class="at">Subway_Perc =</span>  subwayE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-214"><a href="#cb7-214" aria-hidden="true" tabindex="-1"></a>    <span class="at">Comm_Rail_Perc =</span> comm_railE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>, </span>
+<span id="cb7-215"><a href="#cb7-215" aria-hidden="true" tabindex="-1"></a>    <span class="at">Bus_Perc =</span> busE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb7-216"><a href="#cb7-216" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">%&gt;%</span></span>
+<span id="cb7-217"><a href="#cb7-217" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span>(<span class="fu">contains</span>(<span class="fu">c</span>(drop))))<span class="sc">%&gt;%</span></span>
+<span id="cb7-218"><a href="#cb7-218" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb7-219"><a href="#cb7-219" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">ends_with</span>(<span class="st">"_Perc"</span>),</span>
+<span id="cb7-220"><a href="#cb7-220" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"variables"</span>,</span>
+<span id="cb7-221"><a href="#cb7-221" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"estimate"</span>)</span>
+<span id="cb7-222"><a href="#cb7-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-223"><a href="#cb7-223" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-224"><a href="#cb7-224" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2012</span> <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span> <span class="st">"state"</span>, </span>
+<span id="cb7-225"><a href="#cb7-225" aria-hidden="true" tabindex="-1"></a>                   <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"pt"</span> <span class="ot">=</span> pt,</span>
+<span id="cb7-226"><a href="#cb7-226" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"bus"</span> <span class="ot">=</span> bus,</span>
+<span id="cb7-227"><a href="#cb7-227" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"subway"</span> <span class="ot">=</span> subway,</span>
+<span id="cb7-228"><a href="#cb7-228" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"comm_rail"</span> <span class="ot">=</span> comm_rail,</span>
+<span id="cb7-229"><a href="#cb7-229" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"trolley"</span> <span class="ot">=</span> trolley,</span>
+<span id="cb7-230"><a href="#cb7-230" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"ferry"</span> <span class="ot">=</span> ferry</span>
+<span id="cb7-231"><a href="#cb7-231" aria-hidden="true" tabindex="-1"></a>                                 ),</span>
+<span id="cb7-232"><a href="#cb7-232" aria-hidden="true" tabindex="-1"></a>                   <span class="at">year =</span> <span class="dv">2012</span>,</span>
+<span id="cb7-233"><a href="#cb7-233" aria-hidden="true" tabindex="-1"></a>                   <span class="at">survey =</span> <span class="st">"acs5"</span>,</span>
+<span id="cb7-234"><a href="#cb7-234" aria-hidden="true" tabindex="-1"></a>                   <span class="at">output =</span> <span class="st">"wide"</span>)</span>
+<span id="cb7-235"><a href="#cb7-235" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2012</span><span class="sc">$</span>year <span class="ot">&lt;-</span> <span class="dv">2012</span></span>
+<span id="cb7-236"><a href="#cb7-236" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-237"><a href="#cb7-237" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2012</span> <span class="ot">&lt;-</span> pt<span class="fl">.2012</span> <span class="sc">%&gt;%</span> </span>
+<span id="cb7-238"><a href="#cb7-238" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb7-239"><a href="#cb7-239" aria-hidden="true" tabindex="-1"></a>    <span class="at">Ferry_Perc =</span> ferryE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-240"><a href="#cb7-240" aria-hidden="true" tabindex="-1"></a>    <span class="at">Trolley_Perc =</span> trolleyE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-241"><a href="#cb7-241" aria-hidden="true" tabindex="-1"></a>    <span class="at">Subway_Perc =</span>  subwayE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-242"><a href="#cb7-242" aria-hidden="true" tabindex="-1"></a>    <span class="at">Comm_Rail_Perc =</span> comm_railE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>, </span>
+<span id="cb7-243"><a href="#cb7-243" aria-hidden="true" tabindex="-1"></a>    <span class="at">Bus_Perc =</span> busE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb7-244"><a href="#cb7-244" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">%&gt;%</span></span>
+<span id="cb7-245"><a href="#cb7-245" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span>(<span class="fu">contains</span>(<span class="fu">c</span>(drop))))<span class="sc">%&gt;%</span></span>
+<span id="cb7-246"><a href="#cb7-246" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb7-247"><a href="#cb7-247" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">ends_with</span>(<span class="st">"_Perc"</span>),</span>
+<span id="cb7-248"><a href="#cb7-248" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"variables"</span>,</span>
+<span id="cb7-249"><a href="#cb7-249" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"estimate"</span>)</span>
+<span id="cb7-250"><a href="#cb7-250" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-251"><a href="#cb7-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-252"><a href="#cb7-252" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2011</span> <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span> <span class="st">"state"</span>, </span>
+<span id="cb7-253"><a href="#cb7-253" aria-hidden="true" tabindex="-1"></a>                   <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"pt"</span> <span class="ot">=</span> pt,</span>
+<span id="cb7-254"><a href="#cb7-254" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"bus"</span> <span class="ot">=</span> bus,</span>
+<span id="cb7-255"><a href="#cb7-255" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"subway"</span> <span class="ot">=</span> subway,</span>
+<span id="cb7-256"><a href="#cb7-256" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"comm_rail"</span> <span class="ot">=</span> comm_rail,</span>
+<span id="cb7-257"><a href="#cb7-257" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"trolley"</span> <span class="ot">=</span> trolley,</span>
+<span id="cb7-258"><a href="#cb7-258" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"ferry"</span> <span class="ot">=</span> ferry</span>
+<span id="cb7-259"><a href="#cb7-259" aria-hidden="true" tabindex="-1"></a>                                 ),</span>
+<span id="cb7-260"><a href="#cb7-260" aria-hidden="true" tabindex="-1"></a>                   <span class="at">year =</span> <span class="dv">2011</span>,</span>
+<span id="cb7-261"><a href="#cb7-261" aria-hidden="true" tabindex="-1"></a>                   <span class="at">survey =</span> <span class="st">"acs5"</span>,</span>
+<span id="cb7-262"><a href="#cb7-262" aria-hidden="true" tabindex="-1"></a>                   <span class="at">output =</span> <span class="st">"wide"</span>)</span>
+<span id="cb7-263"><a href="#cb7-263" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2011</span><span class="sc">$</span>year <span class="ot">&lt;-</span> <span class="dv">2011</span></span>
+<span id="cb7-264"><a href="#cb7-264" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-265"><a href="#cb7-265" aria-hidden="true" tabindex="-1"></a>pt<span class="fl">.2011</span> <span class="ot">&lt;-</span> pt<span class="fl">.2011</span> <span class="sc">%&gt;%</span> </span>
+<span id="cb7-266"><a href="#cb7-266" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb7-267"><a href="#cb7-267" aria-hidden="true" tabindex="-1"></a>    <span class="at">Ferry_Perc =</span> ferryE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-268"><a href="#cb7-268" aria-hidden="true" tabindex="-1"></a>    <span class="at">Trolley_Perc =</span> trolleyE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-269"><a href="#cb7-269" aria-hidden="true" tabindex="-1"></a>    <span class="at">Subway_Perc =</span>  subwayE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb7-270"><a href="#cb7-270" aria-hidden="true" tabindex="-1"></a>    <span class="at">Comm_Rail_Perc =</span> comm_railE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span>, </span>
+<span id="cb7-271"><a href="#cb7-271" aria-hidden="true" tabindex="-1"></a>    <span class="at">Bus_Perc =</span> busE <span class="sc">/</span> ptE <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb7-272"><a href="#cb7-272" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">%&gt;%</span></span>
+<span id="cb7-273"><a href="#cb7-273" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span>(<span class="fu">contains</span>(<span class="fu">c</span>(drop))))<span class="sc">%&gt;%</span></span>
+<span id="cb7-274"><a href="#cb7-274" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb7-275"><a href="#cb7-275" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">ends_with</span>(<span class="st">"_Perc"</span>),</span>
+<span id="cb7-276"><a href="#cb7-276" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"variables"</span>,</span>
+<span id="cb7-277"><a href="#cb7-277" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"estimate"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We have a few more cleaning steps left to do, “globally” or on all our new variables. First, we will use rbind to make a long table with a single variable column.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>pt.decade <span class="ot">&lt;-</span> <span class="fu">rbind</span>(pt<span class="fl">.2011</span>, pt<span class="fl">.2012</span>, pt<span class="fl">.2013</span>, pt<span class="fl">.2014</span>, pt<span class="fl">.2015</span>, pt<span class="fl">.2016</span>, pt<span class="fl">.2017</span>, pt<span class="fl">.2018</span>, pt<span class="fl">.2019</span>, pt<span class="fl">.2020</span>, pt<span class="fl">.2021</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In the next chunk, we filter to remove Puerto Rico, drop decimals with round() and then add a column with two-letter state abbreviations to make our final plot look oh-so nice.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">#remove PR</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>pt.decade <span class="ot">&lt;-</span> pt.decade <span class="sc">%&gt;%</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(GEOID <span class="sc">&lt;</span> <span class="dv">70</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">#drop everything from the hundreds place on</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>pt.decade<span class="sc">$</span>estimate <span class="ot">&lt;-</span> <span class="fu">round</span>(pt.decade<span class="sc">$</span>estimate, <span class="at">digits =</span> <span class="dv">1</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">#add abreviations</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>abbs <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">NAME =</span> state.name)<span class="sc">%&gt;%</span> <span class="do">##state.name and .abb are handy base r functions!</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">tibble</span>(<span class="at">abb =</span> state.abb)) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(<span class="fu">tibble</span>(<span class="at">NAME =</span> <span class="st">"District of Columbia"</span>, <span class="at">abb =</span> <span class="st">"DC"</span>)) <span class="do">##but they don't include DC?</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>pt.decade <span class="ot">&lt;-</span> <span class="fu">left_join</span>(pt.decade, abbs, <span class="at">by =</span> <span class="st">"NAME"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In the next chunk, we store some variables which will be useful when we start plotting.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">##limits for x and y axes</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>firstyear <span class="ot">&lt;-</span> <span class="dv">2011</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>lastyear <span class="ot">&lt;-</span> <span class="dv">2021</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">#titles are cool</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>plottitle <span class="ot">&lt;-</span> <span class="st">'Public Transportation Ridership Mix by State'</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#making a new column called Mode that will also refactor the variables in the way we want them to appear in the plot</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>pt.decade<span class="sc">$</span>Mode <span class="ot">&lt;-</span> <span class="fu">factor</span>(pt.decade<span class="sc">$</span>variables, <span class="at">levels=</span><span class="fu">c</span>(<span class="st">"Ferry_Perc"</span>, </span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>                                                    <span class="st">"Comm_Rail_Perc"</span>,</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>                                                       <span class="st">"Trolley_Perc"</span>,</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>                                                       <span class="st">"Bus_Perc"</span>,</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>                                                       <span class="st">"Subway_Perc"</span>))</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="co">#storing the colors we want for each mode</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>colors <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Ferry_Perc"</span> <span class="ot">=</span> <span class="st">"#9d9d9d"</span>,</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Comm_Rail_Perc"</span> <span class="ot">=</span> <span class="st">"#2f5da6"</span>,</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Trolley_Perc"</span> <span class="ot">=</span> <span class="st">"#fd8a03"</span>,</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Bus_Perc"</span> <span class="ot">=</span> <span class="st">"#36bbed"</span>,</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Subway_Perc"</span> <span class="ot">=</span> <span class="st">"#fa2d27"</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="co">#going to use this variable to rename our legend items</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>modes<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="st">"Ferry"</span>, </span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Commuter/LD Rail"</span>,</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Light Rail/Trolley"</span>,</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Bus"</span>,</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Subway"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In the next chunk, we will make a test plot which will double as our legend. We will use Alaska, a clever move by Davis.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>legend_AK <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> <span class="fu">subset</span>(pt.decade, NAME <span class="sc">==</span> <span class="st">'Alaska'</span>), <span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> estimate, <span class="at">fill =</span> Mode, <span class="at">group =</span> Mode)) <span class="sc">+</span> </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_area</span>()<span class="sc">+</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="dv">2018</span>, <span class="at">y =</span> <span class="dv">20</span>, </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">label =</span> <span class="st">"AK"</span>, </span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>           <span class="at">size =</span> <span class="dv">5</span>, </span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>           <span class="at">colour =</span> <span class="st">"#222222"</span>)<span class="sc">+</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> colors,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>                    <span class="at">labels =</span> modes) <span class="sc">+</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(firstyear, lastyear), <span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>))<span class="sc">+</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">101</span>),</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>                     <span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>),</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>                     <span class="at">breaks =</span> <span class="fu">c</span>(<span class="dv">25</span>, <span class="dv">50</span>, <span class="dv">75</span>, <span class="dv">100</span>)) <span class="sc">+</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>      <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">'left'</span>,</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">legend.key.height =</span> <span class="fu">unit</span>(.<span class="dv">25</span>, <span class="st">'cm'</span>),</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">legend.key.width =</span> <span class="fu">unit</span>(.<span class="dv">5</span>, <span class="st">'cm'</span>),</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">legend.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">7</span>),</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">legend.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">7</span>),</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">aspect.ratio=</span><span class="dv">1</span>, </span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">'#efefef'</span>, <span class="at">color =</span> <span class="st">'#f6f6f6'</span>), </span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.title =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.ticks =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="fl">2.5</span>,</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">colour =</span> <span class="st">"#222222"</span>),</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.text.x =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.margin =</span> grid<span class="sc">::</span><span class="fu">unit</span>(<span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>), <span class="st">"mm"</span>))</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>legend_AK</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="state_rider_mix_files/figure-html/legend-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Pretty cool! I have no idea who is commuting to work in Alaska by subway or light rail. Congresspeople? Alaskan-New Yorkers?</p>
+<p>Next up, we have a function that comes pretty much line-by-line from Davis. It makes a list of all the unique values in the abb column then plugs each value into the function, spitting out a plot for all 50 states plus D.C.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>states <span class="ot">&lt;-</span> <span class="fu">unique</span>(pt.decade<span class="sc">$</span>abb) <span class="co"># get the unique state names</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>states <span class="ot">&lt;-</span> states[<span class="sc">!</span><span class="fu">grepl</span>(<span class="st">'AK'</span>, states)] <span class="co"># not using filter, because this is a list</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(states)) {</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">subset</span>(pt.decade, abb <span class="sc">==</span> states[i]), </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> estimate, </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>                     <span class="at">fill =</span> Mode, <span class="at">group =</span> Mode)) <span class="sc">+</span> </span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_map</span>() <span class="sc">+</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_area</span>() <span class="sc">+</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="dv">2018</span>, <span class="at">y =</span> <span class="dv">20</span>, </span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>             <span class="at">label =</span> states[i], </span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>             <span class="at">size =</span> <span class="dv">2</span>, </span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>             <span class="at">colour =</span> <span class="st">"#222222"</span>) <span class="sc">+</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> colors) <span class="sc">+</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(firstyear, lastyear), <span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>)) <span class="sc">+</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">100.9</span>))<span class="sc">+</span> </span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">'none'</span>, </span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>          <span class="at">aspect.ratio=</span><span class="dv">1</span>, </span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>          <span class="co">#panel.background =  element_rect(fill = '#efefef', color = '#f6f6f6'), </span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.text.y =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.text.x =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>          <span class="at">plot.margin=</span>grid<span class="sc">::</span><span class="fu">unit</span>(<span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>), <span class="st">"mm"</span>))</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(states[i], plot)</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">remove</span>(plot)</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>OK <span class="co">#print a test plot</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="state_rider_mix_files/figure-html/allplots-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>The OKC Streetcar went live in 2018, and you can see that right here, where the orange line goes real wide.</p>
+<p>There’s really nothing left to do but make a layout and create a patchwork object. Once again, this comes nearly line by line from Davis. She has a great explanation of how this layout works on the post linked above.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>layout<span class="ot">&lt;-</span><span class="fu">c</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">area</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">4</span>),</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">area</span>(<span class="dv">2</span>,<span class="dv">11</span>),</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">area</span>(<span class="dv">3</span>,<span class="dv">10</span>),<span class="fu">area</span>(<span class="dv">3</span>,<span class="dv">11</span>),</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">area</span>(<span class="dv">4</span>,<span class="dv">1</span>),<span class="fu">area</span>(<span class="dv">4</span>,<span class="dv">2</span>),<span class="fu">area</span>(<span class="dv">4</span>,<span class="dv">3</span>),<span class="fu">area</span>(<span class="dv">4</span>,<span class="dv">4</span>),<span class="fu">area</span>(<span class="dv">4</span>,<span class="dv">5</span>),</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">area</span>(<span class="dv">4</span>,<span class="dv">7</span>),<span class="fu">area</span>(<span class="dv">4</span>,<span class="dv">9</span>),<span class="fu">area</span>(<span class="dv">4</span>,<span class="dv">10</span>),<span class="fu">area</span>(<span class="dv">4</span>,<span class="dv">11</span>),</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">area</span>(<span class="dv">5</span>,<span class="dv">1</span>),<span class="fu">area</span>(<span class="dv">5</span>,<span class="dv">2</span>),<span class="fu">area</span>(<span class="dv">5</span>,<span class="dv">3</span>),<span class="fu">area</span>(<span class="dv">5</span>,<span class="dv">4</span>),<span class="fu">area</span>(<span class="dv">5</span>,<span class="dv">5</span>),</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">area</span>(<span class="dv">5</span>,<span class="dv">6</span>),<span class="fu">area</span>(<span class="dv">5</span>,<span class="dv">7</span>),<span class="fu">area</span>(<span class="dv">5</span>,<span class="dv">8</span>),<span class="fu">area</span>(<span class="dv">5</span>,<span class="dv">9</span>),<span class="fu">area</span>(<span class="dv">5</span>,<span class="dv">10</span>),</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">area</span>(<span class="dv">6</span>,<span class="dv">1</span>),<span class="fu">area</span>(<span class="dv">6</span>,<span class="dv">2</span>),<span class="fu">area</span>(<span class="dv">6</span>,<span class="dv">3</span>),<span class="fu">area</span>(<span class="dv">6</span>,<span class="dv">4</span>),<span class="fu">area</span>(<span class="dv">6</span>,<span class="dv">5</span>),</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">area</span>(<span class="dv">6</span>,<span class="dv">6</span>),<span class="fu">area</span>(<span class="dv">6</span>,<span class="dv">7</span>),<span class="fu">area</span>(<span class="dv">6</span>,<span class="dv">8</span>),<span class="fu">area</span>(<span class="dv">6</span>,<span class="dv">9</span>),<span class="fu">area</span>(<span class="dv">6</span>,<span class="dv">10</span>),</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">area</span>(<span class="dv">7</span>,<span class="dv">2</span>),<span class="fu">area</span>(<span class="dv">7</span>,<span class="dv">3</span>),<span class="fu">area</span>(<span class="dv">7</span>,<span class="dv">4</span>),<span class="fu">area</span>(<span class="dv">7</span>,<span class="dv">5</span>),<span class="fu">area</span>(<span class="dv">7</span>,<span class="dv">6</span>),</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">area</span>(<span class="dv">7</span>,<span class="dv">7</span>),<span class="fu">area</span>(<span class="dv">7</span>,<span class="dv">8</span>),<span class="fu">area</span>(<span class="dv">7</span>,<span class="dv">9</span>),<span class="fu">area</span>(<span class="dv">7</span>,<span class="dv">10</span>),</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">area</span>(<span class="dv">8</span>,<span class="dv">3</span>),<span class="fu">area</span>(<span class="dv">8</span>,<span class="dv">4</span>),<span class="fu">area</span>(<span class="dv">8</span>,<span class="dv">5</span>),<span class="fu">area</span>(<span class="dv">8</span>,<span class="dv">6</span>),<span class="fu">area</span>(<span class="dv">8</span>,<span class="dv">7</span>),<span class="fu">area</span>(<span class="dv">8</span>,<span class="dv">8</span>),</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">area</span>(<span class="dv">9</span>,<span class="dv">1</span>),<span class="fu">area</span>(<span class="dv">9</span>,<span class="dv">4</span>),<span class="fu">area</span>(<span class="dv">9</span>,<span class="dv">10</span>)</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>finalplot <span class="ot">&lt;-</span> <span class="fu">wrap_plots</span>(legend_AK, </span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>                        ME, VT, NH, WA, ID, MT, ND, MN, MI, NY, MA, RI,</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>                        OR, UT, WY, SD, IA, WI, OH, PA, NJ, CT,</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>                        CA, NV, CO, NE, IL, IN, WV, VA, MD, DE,</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>                        AZ, NM, KS, MO, KY, TN, SC, NC, DC,</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>                        OK, LA, AR, MS, AL, GA, HI, TX, FL,</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>                        <span class="at">design =</span> layout) <span class="sc">&amp;</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a> <span class="co">#rather than use ggplot for the title, I'm using patchwork's annotation functions</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">title =</span> plottitle, </span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>                  <span class="at">caption =</span> <span class="st">"Data: U.S. Census 2011-2021 ACS 5 Year</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a><span class="st">                                Compiled with tidycensus (Walker 2023) </span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a><span class="st">                                Adapted from Erin Davis, 'How I Made The Viral Map'"</span>,</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>                  <span class="at">theme =</span> <span class="fu">theme</span>(<span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">color  =</span> <span class="st">'#f8f8f8'</span>)))</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>finalplot</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="state_rider_mix_files/figure-html/layout-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

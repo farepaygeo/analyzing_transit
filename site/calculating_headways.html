@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.56">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Analyzing Transit Data - Calculating Headways</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Analyzing Transit Data</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./about.html" rel="" target="">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./cleaning_a_gtfs.html" rel="" target="">
+ <span class="menu-text">Cleaning GTFS</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./calculating_headways.html" rel="" target="" aria-current="page">
+ <span class="menu-text">Calculating Headways</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./calculating_stop_waits.html" rel="" target="">
+ <span class="menu-text">Bus Stop Wait Times</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./state_rider_mix.html" rel="" target="">
+ <span class="menu-text">Ridership Mix in the U.S.</span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Calculating Headways</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<div class="cell" data-hash="calculating_headways_cache/html/unnamed-chunk-1_558e7e9d45627ab2e6edc7a65d2aad1f">
+
+</div>
+<div class="cell" data-hash="calculating_headways_cache/html/setup-2018-2_84fb3b37fdc3888b2ba2b429060f862f">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gtfstools)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="why-calculate-headways" class="level4">
+<h4 class="anchored" data-anchor-id="why-calculate-headways">Why calculate headways?</h4>
+<p>Agencies publish loads of info about their services using GTFS, as we observed when cleaning our data. Some agencies publish optional information, such as frequencies.txt. This file provides information about how often a service runs. This file is used for services, such as the NYC Subway, that run at fixed intervals (e.g.&nbsp;every 4 minutes) rather than adhering to a schedule (e.g.&nbsp;departures at 13:00, 13:04, etc.) This table may also provide headways - time between departures from the same stop - for scheduled service.</p>
+<p>The MTA does not publish frequencies.txt with their GTFS, but that doesn’t mean its not useful information to have. According to the Transit Capacity and Quality of Service Manual,</p>
+<blockquote class="blockquote">
+<p>“the longer the headway, the more inconvenient transit service becomes, both because passengers have to plan their trip around transit service and because they incur more unproductive time during their trip.” (Ch. 4, p.&nbsp;28)</p>
+</blockquote>
+<p>Headways greater than 10 minutes typically lead passengers to invest more time into their journeys to account for less-frequent service. Beyond 15 minutes, passengers must adapt to increasingly less-convenient departure and arrival times for their journeys. Headways upwards of 60 minutes provide “minimal” and “undesirable” service from a passenger’s point of view.</p>
+<p>Headways as a proxy for quality of service can be used to compare service across agencies.</p>
+<p>All this is just to reiterate - headways are a useful thing to have. A GTFS gives us all the information we need to calculate this measure, starting with trip_ids.</p>
+</section>
+<section id="from-trips-to-patterns" class="level4">
+<h4 class="anchored" data-anchor-id="from-trips-to-patterns">From Trips to Patterns</h4>
+<p>In GTFS, trips are the most fine-grained keys in the data. A trip in GTFS corresponds to one bus travelling from its origin to its destination following a specific sequence of stops, in a single direction (inbound/outbound). A trip_id is generated for each scheduled trip for one week of service.</p>
+<div class="cell" data-hash="calculating_headways_cache/html/2018-7_236a0e1b2e8880dc5373d1cde1930f98">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#13k or so trips in this gtfs</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(gtfs_fil<span class="sc">$</span>trips<span class="sc">$</span>trip_id))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 13246</code></pre>
+</div>
+</div>
+<p>Trips are aggregated up to routes, which are sets of trips that serve roughly the same stops in the same sequence, inbound and outbound -- but origins, destinations, and stops served may vary. Routes may contain trips that have particular services depending on the time of day. Stops may be skipped during rush hour, or additional stops may be served to feed rail services.</p>
+<p>An intermediate unit can be assigned by gtfstools: a pattern. Patterns group together trips that follow the same sequence of stops. There are far fewer patterns than there are trips, but more patterns than routes.</p>
+<div class="cell" data-hash="calculating_headways_cache/html/pat-2018-2_a53f7f1cca6e07d030e95cde942e30ba">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>patterns <span class="ot">&lt;-</span> <span class="fu">get_stop_times_patterns</span>(gtfs_fil)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(patterns<span class="sc">$</span>pattern_id))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 287</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#resolution somewhere between trip_id and route_id</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Each pattern_id is associated with a different number of trips.</p>
+<div class="cell" data-hash="calculating_headways_cache/html/pat-count_a2834f5eefe0da15f6db5436e4b97edb">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">count</span>(patterns, pattern_id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     pattern_id   n
+  1:          1 112
+  2:          2 112
+  3:          3 169
+  4:          4 170
+  5:          5 126
+ ---               
+283:        283   1
+284:        284   1
+285:        285   1
+286:        286   1
+287:        287   1</code></pre>
+</div>
+</div>
+<p>Looking at the start and end of this table, we have patterns that are associated with a single trip, or patterns that are associated with over 100 trips. We will use pattern_id as a grouping variable when we calculate headways.</p>
+<p>Most of our cleaning operations were performed globally, but here the first step is to break out the GTFS stop_times table to which we will join the patterns table we created earlier. stop_times is the most fine-grained table in the GTFS; it reports where and in what sequence each trip_id stops along its journey. When we will add to this table pattern IDs as well as route_short_names for grouping and stats we can use later.</p>
+<div class="cell" data-hash="calculating_headways_cache/html/joins_3d14ad35b30b5c8738abf57b866e3d58">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">##in the first line we are linking patterns to stop_times via trip_id</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>stop_times_patt <span class="ot">&lt;-</span> <span class="fu">left_join</span>(gtfs_fil_m_f<span class="sc">$</span>stop_times, patterns, <span class="at">by=</span><span class="st">"trip_id"</span>)<span class="sc">%&gt;%</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="do">##then we pipe the joined table to another join, route_id via trip_id</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(gtfs_fil_m_f<span class="sc">$</span>trips[ , <span class="fu">c</span>(<span class="st">"trip_id"</span>, <span class="st">"route_id"</span>)], <span class="at">by =</span> <span class="st">"trip_id"</span>, <span class="at">keep =</span> <span class="cn">FALSE</span>)<span class="sc">%&gt;%</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="do">##then we pipe it one more time to join route_short_name via route_id</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(gtfs_fil_m_f<span class="sc">$</span>routes[ , <span class="fu">c</span>(<span class="st">"route_id"</span>, <span class="st">"route_short_name"</span>)], <span class="at">by =</span> <span class="st">"route_id"</span>, <span class="at">keep =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(stop_times_patt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "trip_id"             "arrival_time"        "departure_time"     
+ [4] "stop_id"             "stop_sequence"       "stop_headsign"      
+ [7] "pickup_type"         "drop_off_type"       "shape_dist_traveled"
+[10] "departure_time_secs" "arrival_time_secs"   "pattern_id"         
+[13] "route_id"            "route_short_name"   </code></pre>
+</div>
+</div>
+</section>
+<section id="setting-the-grouping-variables" class="level4">
+<h4 class="anchored" data-anchor-id="setting-the-grouping-variables">Setting the Grouping Variables</h4>
+<p>A headway is the time between when buses arrive at the same stop. If trip_1 of Route A arrives at Stop X at 15:00 and trip_2 of Route A arrives at Stop X at 15:10, Route A has a headway of 10 minutes. We know that trip_id is unique for every scheduled trip, and that route_id is agnostic when it comes to origins, destinations, and everything in between. pattern_id, as noted when we cleaned the GTFS, is a handy-middle ground.</p>
+<p>We will use pattern_id along with stop_id as grouping variables so we can calculate headways as illustrated in my simple formulation above. After we group, we arrange by departure time; this is necessary because trip_ids are not arranged chronologically in the GTFS. As published, many trips appear to “leapfrog” each other, which can cause sequentially scheduled trips to appear further apart than they really are.</p>
+<div class="cell" data-hash="calculating_headways_cache/html/grouping_ca3da748e581de114c6c0c110bd3b5a1">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>stop_times_patt_grp <span class="ot">&lt;-</span> <span class="fu">group_by</span>(stop_times_patt, pattern_id, stop_id) <span class="sc">%&gt;%</span> <span class="fu">arrange</span>(departure_time_secs, <span class="at">.by_group =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="running-the-headway-calculation" class="level4">
+<h4 class="anchored" data-anchor-id="running-the-headway-calculation">Running the Headway Calculation</h4>
+<p>We are ready to calculate headways. We subtract arrival_time_secs at each stop from arrival_time_secs of the preceding trip using lag, which respects our grouping variables.</p>
+<div class="cell" data-hash="calculating_headways_cache/html/unnamed-chunk-2_6dfbec1a7de1422b9307a6cec2ba6c50">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="do">##calculate difference in seconds between arrivals at each stop, by trip</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>headways <span class="ot">&lt;-</span> <span class="fu">mutate</span>(stop_times_patt_grp, <span class="at">diff =</span> arrival_time_secs<span class="sc">-</span><span class="fu">lag</span>(arrival_time_secs)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="do">##convert seconds to minutes</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">headway_m =</span> diff<span class="sc">/</span><span class="dv">60</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span>(headways<span class="sc">$</span>headway_m, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1]    0 1260</code></pre>
+</div>
+</div>
+<p>To illustrate, we can filter out a single pattern and observe how we lagged the difference within pattern_id 2 of arrival_time_secs at the second sequential stop of the pattern. The first row is NA because it is the first trip of pattern_id 2; there are no preceding trips from which to calculate difference.</p>
+<div class="cell" data-hash="calculating_headways_cache/html/lag-example_f99a0c5f52483064603eb364abb28ff7">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>pat_2 <span class="ot">&lt;-</span> <span class="fu">filter</span>(headways, pattern_id <span class="sc">==</span> <span class="st">"2"</span>, stop_sequence <span class="sc">==</span> <span class="dv">2</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pat_2<span class="sc">$</span>arrival_time_secs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 14443 17323 20503 23450 26030 28010</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pat_2<span class="sc">$</span>diff)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1]   NA 2880 3180 2947 2580 1980</code></pre>
+</div>
+</div>
+<p>The TCQSM as well as Wong (2013) recommend removing headways of less than 3 minutes and greater than 90 minutes to exclude school services and breaks in service.</p>
+<div class="cell" data-hash="calculating_headways_cache/html/filter_c4db67e8142dd0844886f115d400cccd">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="do">##subsetting using base, as dplyr::filter would get rid of NAs</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>headways_fil <span class="ot">&lt;-</span> headways[headways<span class="sc">$</span>headway_m <span class="sc">&gt;</span> <span class="dv">3</span> <span class="sc">&amp;</span> headways<span class="sc">$</span>headway_m <span class="sc">&lt;</span> <span class="dv">90</span>,]</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span>(headways_fil<span class="sc">$</span>headway_m, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1]  3.033333 89.650000</code></pre>
+</div>
+</div>
+</section>
+<section id="plotting-the-distribution-of-bus-headways" class="level4">
+<h4 class="anchored" data-anchor-id="plotting-the-distribution-of-bus-headways">Plotting the distribution of bus headways</h4>
+<p>We will use our new headway variables in subsequent calculations, like stop wait times. For now, let’s plot a histogram of headways grouped by route_id.</p>
+<div class="cell" data-hash="calculating_headways_cache/html/headway_plot_81ec60d48ee82aa9ec7cb39c212a9558">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>headways_mean <span class="ot">&lt;-</span> headways_fil <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(route_short_name)<span class="sc">%&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean_hw =</span> <span class="fu">mean</span>(headway_m))</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="do">##spit out plot</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(headways_mean, <span class="fu">aes</span>(<span class="at">x=</span>mean_hw)) <span class="sc">+</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="do">##MTA colors</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="dv">5</span>, <span class="at">color =</span> <span class="st">"#FDB90B"</span>, <span class="at">fill =</span> <span class="st">"#A30330"</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">name =</span> <span class="st">"Mean Headways by Routes (minutes)"</span>, <span class="at">breaks=</span><span class="fu">seq</span>(<span class="dv">5</span>,<span class="dv">90</span>,<span class="dv">5</span>))<span class="sc">+</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Count (Routes)"</span>) <span class="sc">+</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">panel.grid.minor.y =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.grid.major.x =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.grid.minor.x =</span> <span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="calculating_headways_files/figure-html/headway_plot-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="plotting-headways-and-trip-count-by-route" class="level4">
+<h4 class="anchored" data-anchor-id="plotting-headways-and-trip-count-by-route">Plotting Headways and Trip Count by Route</h4>
+<p>While it’s neat to have a distribution of headways, showing that most routes are hanging around 40 minutes, why don’t we get a sense of what mean headway is for <em>each</em> route? While we’re doing that, why don’t we get some other stats? One thing that might be particularly interesting is how many trips run on each route per day. We have can see there’s some outliers on this histogram - do those routes make very many trips? Let’s see.</p>
+<div class="cell" data-hash="calculating_headways_cache/html/unnamed-chunk-3_fac704c98a7fa5151fee0e78c25b5f2e">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>headways_rt <span class="ot">&lt;-</span> <span class="fu">group_by</span>(headways_fil, route_short_name) <span class="sc">%&gt;%</span> <span class="co">#group based on route name</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean =</span> <span class="fu">mean</span>(headway_m), <span class="co">#calculate mean headway of each route</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">median =</span> <span class="fu">median</span>(headway_m), <span class="co">#get the medians to catch anything skew</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">count =</span> <span class="fu">length</span>(<span class="fu">unique</span>(trip_id)) <span class="co">#get a count of how many trips run on each route</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>            )<span class="sc">%&gt;%</span> <span class="fu">arrange</span>(mean)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">na.omit</span>(headways_rt), <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(route_short_name, <span class="sc">-</span>mean), <span class="at">y =</span> mean, <span class="at">label =</span> count))<span class="sc">+</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="fu">aes</span>(<span class="at">fill =</span> median)) <span class="sc">+</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="at">check_overlap =</span> <span class="cn">TRUE</span>, <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="fl">0.9</span>), <span class="at">hjust =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_distiller</span>(<span class="at">palette =</span> <span class="st">"PuBuGn"</span>, <span class="at">direction =</span> <span class="dv">1</span>, <span class="at">name =</span> <span class="st">"Median"</span>) <span class="sc">+</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">"Bus Routes"</span>) <span class="sc">+</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">name =</span> <span class="st">"Mean Headway (min.)"</span>, <span class="at">breaks=</span><span class="fu">seq</span>(<span class="dv">5</span>,<span class="dv">60</span>,<span class="dv">5</span>))   <span class="sc">+</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dark</span>() <span class="sc">+</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"MTA Bus Routes - Headways and Trip Counts"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="calculating_headways_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Now this is much more informative. We can see that those two bins on either side of the histogram are made up of a single route. One of those routes, Route 38 which has 5 minute headways, actually only runs once a day. Route 52 and Route 92 only run once a day and five times a day, respectively. Next time we run this analysis, we might add those routes to the ones we purge when we clean the GTFS.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
