@@ -1,0 +1,26 @@
+project:
+  type: website
+
+website:
+  title: "Analyzing Transit Data"
+  navbar:
+    left:
+      - href: about.qmd
+        text: About
+      - href: cleaning_a_gtfs.qmd
+        text: Cleaning GTFS
+      - href: calculating_headways.qmd
+        text: Calculating Headways
+      - href: calculating_stop_waits.qmd
+        text: Bus Stop Wait Times
+      - href: state_rider_mix.qmd
+        text: Ridership Mix in the U.S.
+
+format:
+  html:
+    theme: materia
+    css: styles.css
+    toc: true
+
+editor: visual
+
