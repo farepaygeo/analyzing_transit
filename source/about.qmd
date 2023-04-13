@@ -1,0 +1,38 @@
+---
+title: "About"
+---
+
+## Exploring transit data using GTFS data in R
+
+#### Initial, ordering questions
+
+-   What can we learn from GTFS?
+-   Specifically what can GTFS tell us about changes to Baltimore's bus network?
+
+## BaltimoreLINK
+
+In 2017, MDOT MTA rolled-out its redesigned bus network for Baltimore, called LINK.
+
+> BaltimoreLink is a complete overhaul and rebranding of the core transit system operating within the city and throughout the greater Baltimore region. The bus network prior to BaltimoreLink had many routes that were antiquated, served outdated job locations and were too long to manage reliably, especially those that traversed downtown Baltimore and compounded congestion. -MDOT MTA, ["BaltimoreLINK Basics"](https://www.mta.maryland.gov/baltimorelink-basics)
+
+## Why/what "change"?
+
+MDOT [materials](https://www.baltometro.org/sites/default/files/bmc_documents/committee/presentations/tc/TC171003pres_BaltimoreLink-Redesign.pdf) contemporary with LINK's roll-out proclaim "In order to fix the system, we have to change the system." What were the changes they made to the system? Has the system been fixed through these changes?
+
+-   Longest routes were shortened
+
+-   **Frequencies increased on key routes**
+
+-   Congestion-relief downtown
+
+-   Improve performance on 20 most frequently used routes\
+
+## Why GTFS?
+
+> The General Transit Feed Specification (GTFS) is a data specification that allows public transit agencies to publish their transit data in a format that can be consumed by a wide variety of software applications. GTFS is split into a schedule component that contains schedule, fare, and geographic transit information and a real-time component that contains arrival predictions, vehicle positions and service advisories. - [GTFS: Making Public Transit Data Universally Accessible](http://gtfs.org)\
+
+GTFS is probably best known as the "feed" that is consumed by apps like Google Maps, Transit and Citymapper. It provides those applications with information about transit stops, the routes that serve them, when they are served and how much it costs to ride them. It is an open source data specification that supports a whole bunch of transit-related interfaces, basically.
+
+## Working with GTFS in R
+
+To learn more about working with GTFS in R, check out the "Calculating Headways" and "Bus Stop Wait Times" pages.

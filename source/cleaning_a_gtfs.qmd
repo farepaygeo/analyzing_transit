@@ -1,0 +1,115 @@
+---
+title: "Cleaning a GTFS using gtfstools"
+---
+
+#### Introducing GTFS and gtfstools
+
+On this page, use some functions from gtfstools as well as the tidyverse to clean a GTFS. We will explore some of the structure of the GTFS and prepare it for calculations we will perform on subsequent pages.
+
+```{r, label='setup-2018-2'}
+#| output: false
+library(gtfstools)
+library(dplyr)
+```
+
+read_gtfs reads a GTFS, holding it in your environment as a special datatable: a dt_gtfs.
+
+```{r, label='re-2018-2'}
+
+gtfs <- read_gtfs("./data/gtfs 11_2018.zip")
+class(gtfs)
+
+summary(gtfs)
+```
+
+##### The data
+
+For this exercise, we are using a GTFS published by the Maryland Transit Administration (MTA), containing information about service from September 2018 into February 2019. That information is contained, appropriately, in the "calendar" table of the dt_gtfs.
+
+```{r, label ='gtfs-dates'}
+
+gtfs$calendar$start_date
+gtfs$calendar$end_date
+
+```
+
+There are a bunch of other tables here, containing rows upon rows of information about transit service circa Fall and Winter, 2018-19. One of the tables is "routes" which contains information about route names and types.
+
+```{r, label="route-type"}
+unique(gtfs$routes$route_type)
+```
+
+#### Filtering by route type
+
+In the [GTFS Reference](https://developers.google.com/transit/gtfs/reference#routestxt), light rail is assigned type "0", subway is assigned type "1", intercity rail is assigned type "2", and bus is assigned type "3". Knowing this, we can use the filter_by_route_type function in gtfstools to filter the entire dt_gtfs to just the information about bus service.
+
+```{r, label="fil-rt-2018-2"}
+##filter down gtfs to just bus routes
+gtfs <- filter_by_route_type(gtfs, route_type = 3)
+##from 4 types to 1
+unique(gtfs$routes$route_type) 
+```
+
+Agencies assign their own route_ids and these change with each new GTFS published. However, route_id corresponds to route_short_name, which does not change unless a route is eliminated or renamed.
+
+```{r, label="route-id-names"}
+length(unique(gtfs$routes$route_id))
+length(unique(gtfs$routes$route_short_name))
+#it's 1:1
+```
+
+#### Filtering buses
+
+In the MTA bus system, routes 95 and greater are commuter and supplementary services. A number of these commuter routes serve Washington D.C. For this analysis, we are only interested in regular services in Baltimore City and that extend into surrounding Baltimore and Anne Arundel Counties.
+
+In the next chunk, we will pass a range of numbers representing the extraneous bus routes to a character vector. Then, we will subset rows that have a route_short_name match in the character vector. We can pass the values from the resulting route_id column to a new character vector, which we can subsequently use with gtfstools filter_by_route_id function.
+
+```{r, label='filter-by-rid'}
+##create vector of route short names
+comm_names <- as.character(95:850)
+##subset route ids that have a match in the comm_names vector
+route_ids <- gtfs$routes[which(gtfs$routes$route_short_name %in% comm_names), "route_id"]
+##pass the route ids to a new vector
+comm_ids <- c(route_ids$route_id)
+##filter by route id
+gtfs_fil <- filter_by_route_id(gtfs, comm_ids, keep = FALSE) ##seeya
+
+length(unique(gtfs_fil$routes$route_id))
+
+```
+
+#### Times and days of the week
+
+GTFS stores arrival and departure times as a character in HH:MM:SS format.
+
+```{r, label='time-head'}
+head(gtfs_fil$stop_times$arrival_time)
+```
+
+The convert_time_to_seconds function allows us to convert all arrival and departure times from HH:MM:SS format to seconds after midnight. This is going to make later calculations much easier. It also helps iron out some quirks that come with transit scheduling, since a single day of service can often extend beyond 24 hours.
+
+```{r, label='secs-2018-2'}
+gtfs_fil <- convert_time_to_seconds(gtfs_fil)
+head(gtfs_fil$stop_times$arrival_time_secs)
+```
+
+Finally, I'm going to break the GTFS down into weekday (Monday to Friday) and weekend (Saturday and Sunday) service. Service is often pared back on the weekends and it may be useful to exclude those trips from our subsequent calculations.
+
+Agencies assign service IDs to differentiate days of the week. There might be additional service IDs that pertain to special holiday or event services.
+
+```{r, label='calendar'}
+gtfs_fil$calendar
+```
+
+gtfstools handles this type of filtering, once again, with a function. We'll store character vectors for the respective service groupings and then use them to filter the GTFS globally. We could also use the service IDs to filter individual data tables, like gtfs_fil\$trips.
+
+```{r, label='filter-by-week'}
+m_f <- c("monday", "tuesday", "wednesday", "thursday", "friday")
+sa_su <- c("saturday", "sunday")
+
+gtfs_fil_m_f <- filter_by_weekday(gtfs_fil, m_f, combine = "and")
+gtfs_fil_sa_su <- filter_by_weekday(gtfs_fil, sa_su, combine = "or")
+
+unique(gtfs_fil_m_f$trips$service_id)
+unique(gtfs_fil_sa_su$trips$service_id)
+```

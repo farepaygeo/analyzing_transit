@@ -1,0 +1,5 @@
+---
+title: "Analyzing Transit Data"
+---
+
+Welcome! My name is Joe Gallagher. This page originated during my studies in the Department of Geography and Environmental Systems at UMBC, where I am a PhD student. I am using this site to share some work I've been doing with transit data in R. Most of the content in here is about working with GTFS data, although there is one vignette so far about working with transit data from the U.S. Census. Read on to see how GTFS can be used to understand transit in Baltimore and the U.S.

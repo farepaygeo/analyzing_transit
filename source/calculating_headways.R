@@ -1,8 +1,10 @@
-##calculating headways, canonical as of 4/6/2023
+##setup
 library(gtfstools)
 library(dplyr)
-#cleaning
+library(ggplot2)
 gtfs <- read_gtfs("./data/gtfs 11_2018.zip")
+#cleaning
+
 class(gtfs)
 
 summary(gtfs)
@@ -38,7 +40,7 @@ gtfs_fil_m_f <- filter_by_weekday(gtfs_fil, m_f, combine = "and")
 gtfs_fil_sa_su <- filter_by_weekday(gtfs_fil, sa_su, combine = "or")
 
 ##ok cleaned, calculate headways
-library(ggplot2)
+
 
 ##in the first line we are linking patterns to stop_times via trip_id
 stop_times_patt <- left_join(gtfs_fil_m_f$stop_times, patterns, by="trip_id")%>%
@@ -59,7 +61,7 @@ range(headways$headway_m, na.rm = TRUE)
 headways_fil <- headways[headways$headway_m > 3 & headways$headway_m < 90,]
 range(headways_fil$headway_m, na.rm = TRUE)
 
-#plot
+#plot histogram
 headways_mean <- headways_fil %>% group_by(route_short_name)%>%
   summarise(mean_hw = mean(headway_m))
 ##spit out plot
@@ -73,11 +75,23 @@ ggplot(headways_mean, aes(x=mean_hw)) +
         panel.grid.minor.x = element_blank())
 
 
+#horizontal bar chart
+ggplot(na.omit(headways_rt), aes(x = reorder(route_short_name, -mean), y = mean, label = count))+
+  geom_col(aes(fill = median)) +
+  coord_flip() +
+  geom_text(check_overlap = TRUE, color = "white", position = position_dodge(0.9), hjust = 0) +
+  scale_fill_distiller(palette = "PuBuGn", direction = 1, name = "Median") +
+  xlab("Bus Routes") +
+  scale_y_continuous(name = "Mean Headway (min.)", breaks=seq(5,60,5))   +
+  theme_dark() +
+  ggtitle("MTA Bus Routes - Headways and Trip Counts")
+
+
+
 ##output
-write.csv(headways_mean, "./data/headways_mean.csv")
-write.csv(headways_fil, "data/headways_fil.csv")
-write.csv(headways, "data/headways.csv")
-write_gtfs(gtfs_fil, "data/gtfs_fil.zip")
-write_gtfs(gtfs_fil_m_f, "data/gtfs_fil_m_f.zip")
-write_gtfs(gtfs_fil_sa_su, "data/gtfs_fil_sa_su.zip")
-write.csv(patterns, "data/patterns.csv")
+#write.csv(headways_mean, "./data/headways_mean.csv")
+#write.csv(headways_fil, "data/headways_fil.csv")
+#write.csv(headways, "data/headways.csv")
+#write_gtfs(gtfs_fil, "data/gtfs_fil.zip")
+#write_gtfs(gtfs_fil_sa_su, "data/gtfs_fil_sa_su.zip")
+#write.csv(patterns, "data/patterns.csv")
